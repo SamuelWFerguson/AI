@@ -37,8 +37,8 @@ public class LongestPathWocGaApp extends Application {
         primaryStage.show();
 
         // read file info
-        File file = new File(FILE_PATH);
-        TspFile tspFile = TspFileParser.parseTspFile(file);
+        //File file = new File(FILE_PATH);
+        //TspFile tspFile = TspFileParser.parseTspFile(file);
 
         // populate list of nodes
         List<Node> nodes = new ArrayList<>();
@@ -57,7 +57,7 @@ public class LongestPathWocGaApp extends Application {
         Integer maxPopulationSize = 100;
         Integer experimentLength = 1500;
         Integer mutationsOf1000 = 250;
-        Integer numberOfExperts = 1000;
+        Integer numberOfExperts = 100;
 
         // Run genetic experiment, get the results
         ArrayList<ExperimentResults> experts = new ArrayList<>();
