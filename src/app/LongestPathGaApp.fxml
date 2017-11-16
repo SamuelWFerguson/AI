@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.Controller">
+   <BorderPane prefHeight="1000" prefWidth="1500">
+      <left>
+         <BorderPane BorderPane.alignment="CENTER">
+            <center>
+                <Canvas fx:id="canvas" height="500.0" width="500.0" BorderPane.alignment="CENTER" />
+            </center>
+            <top>
+               <Label prefHeight="50" scaleX="2" scaleY="2" text="longest path" BorderPane.alignment="CENTER" />
+            </top>
+         </BorderPane>
+      </left>
+      <bottom>
+         <ListView fx:id="properties" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+      </bottom>
+      <center>
+          <LineChart fx:id="lineChart" title="Path Cost Over Time">
+              <xAxis>
+                  <NumberAxis side="BOTTOM" label="Cycle"/>
+              </xAxis>
+              <yAxis>
+                  <NumberAxis fx:id="yAxis" side="LEFT" label="Cost"/>
+              </yAxis>
+          </LineChart>
+      </center>
+   </BorderPane>
+
+
+</AnchorPane>
