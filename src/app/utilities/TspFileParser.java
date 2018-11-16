@@ -32,8 +32,8 @@ public class TspFileParser {
                         coordinates[2] = Double.parseDouble(coordinatesAsString[2]);
                         tspFile.addCoordinates(coordinates);
                     } else {
-                        // input file is formatted incorrectly- somebody has clearly sabotaged our input files.
-                        throw new Exception("Somebody's poisoned the water hole!");
+                        // input file is formatted incorrectly- somebody has clearly sabotaged the input files.
+                        throw new Exception("Somebody's poisoned the watering hole!");
                     }
                 }
                 if (line.equals("NODE_COORD_SECTION")) {

@@ -23,10 +23,9 @@ public class Controller {
     private static NumberAxis chartYAxis;
 
     private final static String seriesName = "Path Cost";
-    private final static String bestExpert = "best expert";
-    private final static String worstExpert = "worst expert";
-    private final static String averageExpert = "average expert";
-    private final static String wisdomPath = "wisdom path";
+    private final static String bestExpert = "Shortest Path";
+    private final static String worstExpert = "Longest Path";
+    private final static String averageExpert = "Average Path";
 
 
 
@@ -72,9 +71,6 @@ public class Controller {
                 case 2:
                     pathSeries.getData().add(new XYChart.Data<>(averageExpert, pathCost));
                     break;
-                case 3:
-                    pathSeries.getData().add(new XYChart.Data<>(wisdomPath, pathCost));
-                    break;
                 default:
                     break;
             }
@@ -94,14 +90,14 @@ public class Controller {
         
     	// create avg series
         XYChart.Series<Number, Number> avgSeries = new XYChart.Series<Number, Number>();
-        avgSeries.setName("avg cost");
+        avgSeries.setName("average path cost");
         for (int i = 0; i < avgData.size(); i++) {
             avgSeries.getData().add(new XYChart.Data<Number, Number>(i + 1, avgData.get(i)));
         }
         
         // create best series
         XYChart.Series<Number, Number> bestSeries = new XYChart.Series<Number, Number>();
-        bestSeries.setName("best path cost");
+        bestSeries.setName("shortest path cost");
         for (int i = 0; i < bestData.size(); i++) {
             bestSeries.getData().add(new XYChart.Data<Number, Number>(i + 1, bestData.get(i)));
         }
