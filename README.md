@@ -15,6 +15,5 @@ This population improves itself each cycle until eventually a ceiling is reached
 At this ceiling, the genetic algorithm has found its near-optimal population.
 
 <p align="center">
-  <img src="./img/Example.png" alt="Genetic Algorithm Application example"
-       width="650" height="335">
+  <img src="./img/Example.png" alt="Genetic Algorithm Application example">
 </p>
