@@ -4,6 +4,7 @@ import app.models.Edge;
 import app.models.Node;
 import app.models.TspFile;
 import app.models.LifeForm;
+import app.utilities.GraphGenerator;
 import app.utilities.TspFileParser;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -20,9 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class LongestPathGaApp extends Application {
-
-    private static String FILE_PATH = "/home/sam/Documents/CECS545/Project 5/Random222.tsp";
+public class GeneticAlgorithmSolverApp extends Application {
 
     public static void main(String[] args) {
         launch(args);
@@ -31,7 +30,7 @@ public class LongestPathGaApp extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
         // set path to our fxml file
-        Parent root = FXMLLoader.load(getClass().getResource("LongestPathGaApp.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("GeneticAlgorithmSolverApp.fxml"));
 
         // define size when creating new scene
         Scene scene = new Scene(root, 1500, 1000);
@@ -41,16 +40,15 @@ public class LongestPathGaApp extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        // read file info
-        File file = new File(FILE_PATH);
-        TspFile tspFile = TspFileParser.parseTspFile(file);
-
+        // generate coordinates of all nodes
+        List<Double[]> generatedCoordinates = GraphGenerator.generateGraph(45);
+        
         // populate list of nodes
         List<Node> nodes = new ArrayList<>();
-        if (tspFile != null && tspFile.getCoordinates() != null) {
-            for (Double[] coordinates : tspFile.getCoordinates()) {
-                nodes.add(new Node(coordinates[0], coordinates[1], coordinates[2]));
-            }
+        
+        // create nodes from all coordinates and add thme to list
+        for (Double[] coordinates : generatedCoordinates) {
+            nodes.add(new Node(coordinates[0], coordinates[1], coordinates[2]));
         }
 
         //===============================================
@@ -109,9 +107,7 @@ public class LongestPathGaApp extends Application {
         // Begin cycles
         //===============================================
         while (cycleCount < experimentLength) {
-            //-----------------------------------------------
-            // Calculate statistics
-            //-----------------------------------------------
+        	
             popMaxDistance = null;
             popMinDistance = null;
             popAvgDistance = 0.0;
@@ -140,8 +136,10 @@ public class LongestPathGaApp extends Application {
                 popAvgDistance += lifeForm.getTotalDistance();
             }
 
-            // graphing data
+            // Calculate average path distance for population
             popAvgDistance = popAvgDistance / population.size();
+            
+            // add data points to each chart
             avgChartDataPoints.add(Math.toIntExact(Math.round(popAvgDistance)));
             bestChartDataPoints.add(Math.toIntExact(Math.round(popMinDistance)));
             worstChartDataPoints.add(Math.toIntExact(Math.round(popMaxDistance)));
@@ -153,55 +151,97 @@ public class LongestPathGaApp extends Application {
             //-----------------------------------------------
             // Kill
             //-----------------------------------------------
-            Double pathCostToBeat = null;
+            Double pathDistanceToBeat = null;
+            // kill off lifeforms until population is half the maximum size
             while (population.size() > maxPopulationSize / 2) {
-                // find who of the population will be receiving my judgement
+            	
+                // pick a random index anywhere in the population
                 int indexNum = ThreadLocalRandom.current().nextInt(0, population.size());
                 LifeForm target = population.get(indexNum);
+                
                 // set the path cost to beat if it hasn't already been set
-                if (pathCostToBeat == null) {
-                    pathCostToBeat = target.getTotalDistance();
+                if (pathDistanceToBeat == null) {
+                    pathDistanceToBeat = target.getTotalDistance();
                     continue;
                 }
-                // check if our target deserves to live
-                if (target.getTotalDistance() <= pathCostToBeat) {
+                
+                // If our target is longer than our pathDistanceToBeat, kill the target.
+                if (target.getTotalDistance() >= pathDistanceToBeat) {
                     population.remove(target);
                 }
-                pathCostToBeat = target.getTotalDistance();
+                
+                // set new path to beat
+                pathDistanceToBeat = target.getTotalDistance();
             }
 
             //-----------------------------------------------
             // Breed
             //-----------------------------------------------
+            
+            // create an empty list of babies which we will be adding onto 
             List<LifeForm> babies = new ArrayList<>();
+            
             while (population.size() + babies.size() < maxPopulationSize) {
+            	
+            	// assign lifeforms 1 and 2 as parents
                 LifeForm parentX = population.get(0);
                 LifeForm parentY = population.get(1);
-                // find best possible parents
+                
+                // find better parents if possible
                 for (LifeForm possibleParent : population) {
+                	
+                	// no need to check against current parent
                     if (possibleParent == parentX || possibleParent == parentY) {
                         continue;
                     }
+                    
+                    // assign new parent x and move on
                     if (possibleParent.getTotalDistance() > parentX.getTotalDistance()) {
                         parentX = possibleParent;
+                        continue;
                     }
+                    
+                    // assign new parent y and move on
                     if (possibleParent.getTotalDistance() > parentY.getTotalDistance()) {
                         parentY = possibleParent;
+                        continue;
                     }
                 }
+                
+                // breed parents
                 LifeForm baby = breedLifeForms(parentX, parentY);
+                // add new baby to list of babies
                 babies.add(baby);
             }
+            
+            // add all new babies into the population
             population.addAll(babies);
 
             //-----------------------------------------------
             // Mutate
             //-----------------------------------------------
+            // for every single member of the population, give a chance to mutate
             for (int i = 0; i < population.size(); i++) {
+            	
                 LifeForm lifeForm = population.get(i);
+                
+                // generate a random number to determine if we have a mutation or not
                 Integer random = ThreadLocalRandom.current().nextInt(1,1001);
+                
+                // if this number is less than our set mutations per 1000 lifeforms, mutate
                 if (random < mutationsOf1000) {
-                    LifeForm mutatedLifeForm = mutateLifeForm3WayMix(lifeForm);
+                	
+                	LifeForm mutatedLifeForm;
+                	
+                	// randomly choose a mutation
+                	Boolean randomBool = ThreadLocalRandom.current().nextBoolean();
+                	if (randomBool) {
+                		mutatedLifeForm = mutateLifeForm2WaySwap(lifeForm);
+                	} else {
+                        mutatedLifeForm = mutateLifeForm3WayMix(lifeForm);             		
+                	}
+                	
+                	// add mutated lifeform back into the population
                     population.set(i, mutatedLifeForm);
                 }
             }
@@ -211,14 +251,14 @@ public class LongestPathGaApp extends Application {
 
 
         // draw best path overall
-        Controller.drawPath(expWorstLifeForm.getPath(), Color.BLACK);
+        Controller.drawPath(expBestLifeForm.getPath(), Color.BLACK);
 
         // graph avg, best, and worst path's over time
         Integer lowerBound = Math.toIntExact(Math.round(expBestLifeForm.getTotalDistance() - 10));
         Integer upperBound = Math.toIntExact(Math.round(expWorstLifeForm.getTotalDistance() + 10));
         Controller.graphLineChart(lowerBound, upperBound, avgChartDataPoints, bestChartDataPoints, worstChartDataPoints);
 
-        // list properties for GA
+        // list properties for Genetic Algorithm
         List<String> propertyList = new ArrayList<>();
         propertyList.add("Length of Experiment: " + experimentLength + " cycles");
         propertyList.add("Mutation Rate: approximately " + mutationsOf1000 + " mutations every thousand life forms");
@@ -226,6 +266,7 @@ public class LongestPathGaApp extends Application {
         propertyList.add("Longest path: " + expWorstLifeForm.getPath());
         propertyList.add("Longest path Cost: " + expWorstLifeForm.getTotalDistance());
 
+        // determine experiment average
         Double expAverage = 0.0;
         for (Double avg : expAverages) {
             expAverage += avg;
@@ -233,6 +274,7 @@ public class LongestPathGaApp extends Application {
         expAverage = expAverage / expAverages.size();
         propertyList.add("Experiment Average: " + expAverage);
 
+        // determine experiment standard deviation
         Double expStdDeviation = 0.0;
         for (Double stdDev : expStdDeviations) {
             expStdDeviation += stdDev;
@@ -240,7 +282,6 @@ public class LongestPathGaApp extends Application {
         expStdDeviation = expStdDeviation / expAverages.size();
         propertyList.add("Experiment Std Dev: " + expStdDeviation);
 
-        System.out.println(expWorstLifeForm.getPath());
         Controller.setPropertyList(propertyList);
     }
 
@@ -271,7 +312,7 @@ public class LongestPathGaApp extends Application {
         return baby;
     }
 
-    private LifeForm mutateLifeFormSwap2(LifeForm target) {
+    private LifeForm mutateLifeForm2WaySwap(LifeForm target) {
         List<Node> path = new ArrayList<>(target.getPath());
         Integer indexA = ThreadLocalRandom.current().nextInt(0, path.size());
         Integer indexB = indexA + 1;
@@ -383,10 +424,6 @@ public class LongestPathGaApp extends Application {
             Integer n1Index = path.indexOf(n1);
             path.add(n1Index, nextNode);
         }
-    }
-
-    private ArrayList<Node> buildRandomPath(ArrayList<Node> nodes) {
-        return null;
     }
 
     private static Double getTotalDistanceOfPath(List<Node> path) {

@@ -17,7 +17,7 @@ import java.util.Map;
 public class Controller {
 
     private static GraphicsContext gc;
-    private static ListView propertyList;
+    private static ListView<String> propertyList;
     private static BarChart<String, Number> costChart;
     private static LineChart<Number, Number> costOverTimeChart;
     private static NumberAxis chartYAxis;
@@ -39,7 +39,7 @@ public class Controller {
     @FXML
     private NumberAxis yAxis;
     @FXML
-    private ListView properties;
+    private ListView<String> properties;
 
     @FXML
     void initialize() {
@@ -91,35 +91,37 @@ public class Controller {
     }
 
     static void graphLineChart(Integer lowerBound, Integer upperBound, ArrayList<Integer> avgData, ArrayList<Integer> bestData, ArrayList<Integer> worstData) {
-        // create avg series
-        XYChart.Series avgSeries = new XYChart.Series<Integer, Integer>();
+        
+    	// create avg series
+        XYChart.Series<Number, Number> avgSeries = new XYChart.Series<Number, Number>();
         avgSeries.setName("avg cost");
         for (int i = 0; i < avgData.size(); i++) {
-            avgSeries.getData().add(new XYChart.Data<>(i + 1, avgData.get(i)));
+            avgSeries.getData().add(new XYChart.Data<Number, Number>(i + 1, avgData.get(i)));
         }
-        /*// create best series
-        XYChart.Series bestSeries = new XYChart.Series();
+        
+        // create best series
+        XYChart.Series<Number, Number> bestSeries = new XYChart.Series<Number, Number>();
         bestSeries.setName("best path cost");
         for (int i = 0; i < bestData.size(); i++) {
-            bestSeries.getData().add(new XYChart.Data<Integer, Integer>(i + 1, bestData.get(i)));
-        }*/
-
-        // create longest series
-        XYChart.Series worstSeries = new XYChart.Series();
-        worstSeries.setName("longest path cost");
-        for (int i = 0; i < worstData.size(); i++) {
-            worstSeries.getData().add(new XYChart.Data<Integer, Integer>(i + 1, worstData.get(i)));
+            bestSeries.getData().add(new XYChart.Data<Number, Number>(i + 1, bestData.get(i)));
         }
 
-        costOverTimeChart.getData().addAll(avgSeries, worstSeries);
+        // create longest series
+        XYChart.Series<Number, Number> worstSeries = new XYChart.Series<Number, Number>();
+        worstSeries.setName("longest path cost");
+        for (int i = 0; i < worstData.size(); i++) {
+            worstSeries.getData().add(new XYChart.Data<Number, Number>(i + 1, worstData.get(i)));
+        }
+
+        costOverTimeChart.getData().addAll(bestSeries, avgSeries, worstSeries);
         chartYAxis.setAutoRanging(false);
         chartYAxis.setLowerBound(lowerBound);
         chartYAxis.setUpperBound(upperBound);
         chartYAxis.setTickUnit(100.0);
     }
 
-    static void setPropertyList(List list) {
-        ObservableList oList = FXCollections.observableArrayList(list);
+    static void setPropertyList(List<String> list) {
+        ObservableList<String> oList = FXCollections.observableArrayList(list);
         propertyList.setItems(oList);
     }
 

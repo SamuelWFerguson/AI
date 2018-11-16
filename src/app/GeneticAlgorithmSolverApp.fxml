@@ -18,7 +18,7 @@
                 <Canvas fx:id="canvas" height="500.0" width="500.0" BorderPane.alignment="CENTER" />
             </center>
             <top>
-               <Label prefHeight="50" scaleX="2" scaleY="2" text="longest path" BorderPane.alignment="CENTER" />
+               <Label prefHeight="50" scaleX="2" scaleY="2" text="Best Path" BorderPane.alignment="CENTER" />
             </top>
          </BorderPane>
       </left>
