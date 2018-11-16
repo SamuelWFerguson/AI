@@ -55,7 +55,7 @@ public class GeneticAlgorithmSolverApp extends Application {
         // Set up variables for genetic algorithm
         //===============================================
         Integer maxPopulationSize = 200;
-        Integer experimentLength = 1000;
+        Integer experimentLength = 1200;
         Integer cycleCount = 0;
         Integer mutationsOf1000 = 150;
 
@@ -80,6 +80,8 @@ public class GeneticAlgorithmSolverApp extends Application {
         if (maxPopulationSize > nodes.size()) {
             maxPopulationSize = nodes.size();
         }
+        
+        // fill population using a simple greedy algorithm
         for (int initialNodeIndex = 0; initialNodeIndex < maxPopulationSize; initialNodeIndex++) {
             // begin to build path
             List<Node> unvisitedNodes = new ArrayList<>(nodes);
@@ -166,7 +168,8 @@ public class GeneticAlgorithmSolverApp extends Application {
                 }
                 
                 // If our target is longer than our pathDistanceToBeat, kill the target.
-                if (target.getTotalDistance() >= pathDistanceToBeat) {
+                // TODO: prevent infinite looping of while loop
+                if (target.getTotalDistance() > pathDistanceToBeat) {
                     population.remove(target);
                 }
                 
@@ -196,13 +199,13 @@ public class GeneticAlgorithmSolverApp extends Application {
                     }
                     
                     // assign new parent x and move on
-                    if (possibleParent.getTotalDistance() > parentX.getTotalDistance()) {
+                    if (possibleParent.getTotalDistance() < parentX.getTotalDistance()) {
                         parentX = possibleParent;
                         continue;
                     }
                     
                     // assign new parent y and move on
-                    if (possibleParent.getTotalDistance() > parentY.getTotalDistance()) {
+                    if (possibleParent.getTotalDistance() < parentY.getTotalDistance()) {
                         parentY = possibleParent;
                         continue;
                     }
@@ -221,9 +224,16 @@ public class GeneticAlgorithmSolverApp extends Application {
             // Mutate
             //-----------------------------------------------
             // for every single member of the population, give a chance to mutate
+            Double newPopulationBestDistance = null;
             for (int i = 0; i < population.size(); i++) {
             	
                 LifeForm lifeForm = population.get(i);
+                
+                // do not mutate the best lifeform of the new population
+                if (newPopulationBestDistance == null || getTotalDistanceOfPath(lifeForm.getPath()) < newPopulationBestDistance ) {
+                	newPopulationBestDistance = getTotalDistanceOfPath(lifeForm.getPath());
+                	continue;
+                }
                 
                 // generate a random number to determine if we have a mutation or not
                 Integer random = ThreadLocalRandom.current().nextInt(1,1001);
