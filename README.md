@@ -13,3 +13,8 @@ This application aims to find near-optimal results for the TSP in non-polynomial
 To do this, a 'population' of solutions is put through the 3 basic cycles of life: breeding, mutation, and death.
 This population improves itself each cycle until eventually a ceiling is reached where the algorithm is no longer making significant improvments.
 At this ceiling, the genetic algorithm has found its near-optimal population.
+
+<p align="center">
+  <img src="./img/example.png" alt="Genetic Algorithm Application example"
+       width="650" height="335">
+</p>
