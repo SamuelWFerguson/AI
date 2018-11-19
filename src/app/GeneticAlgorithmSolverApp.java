@@ -26,9 +26,9 @@ public class GeneticAlgorithmSolverApp extends Application {
 	//===============================================
     // Set up variables for experiment
     //===============================================
-	public static final Integer NUMBER_OF_CITIES = 45;
+	public static final Integer NUMBER_OF_CITIES = 25;
     public static final Integer MAX_POPULATION_SIZE = 200;
-    public static final Integer EXPERIMENT_LENGTH = 1200;
+    public static final Integer EXPERIMENT_LENGTH = 750;
     public static final Integer MUTATIONS_OF_1000 = 150;
 
     public static void main(String[] args) {
@@ -86,6 +86,9 @@ public class GeneticAlgorithmSolverApp extends Application {
         ArrayList<Integer> bestChartDataPoints = new ArrayList<>();
         LifeForm expBestLifeForm = null;
         LifeForm expWorstLifeForm = null;
+        
+        // record time of experiment start
+        long startingTime = System.nanoTime();
 
         //===============================================
         // Fill initial population using greedy algorithm
@@ -118,10 +121,6 @@ public class GeneticAlgorithmSolverApp extends Application {
         //===============================================
         // Begin cycles
         //===============================================
-        
-        // get experiment starting time
-        long startingTime = System.nanoTime();
-        
         
         for (int cycleCount = 0; cycleCount < EXPERIMENT_LENGTH; cycleCount++) {
         	
@@ -185,8 +184,8 @@ public class GeneticAlgorithmSolverApp extends Application {
                     continue;
                 }
                 
-                // If our target is longer than our pathDistanceToBeat, kill the target.
-                if (target.getTotalDistance() > pathDistanceToBeat) {
+                // If our target is longer than or equal to our pathDistanceToBeat, kill the target.
+                if (target.getTotalDistance() >= pathDistanceToBeat) {
                     population.remove(target);
                 }
                 
