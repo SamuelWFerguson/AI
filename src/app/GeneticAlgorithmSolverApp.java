@@ -22,6 +22,14 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GeneticAlgorithmSolverApp extends Application {
+	
+	//===============================================
+    // Set up variables for experiment
+    //===============================================
+	public static final Integer NUMBER_OF_CITIES = 45;
+    public static final Integer MAX_POPULATION_SIZE = 200;
+    public static final Integer EXPERIMENT_LENGTH = 1200;
+    public static final Integer MUTATIONS_OF_1000 = 150;
 
     public static void main(String[] args) {
         launch(args);
@@ -29,6 +37,11 @@ public class GeneticAlgorithmSolverApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws IOException {
+    	
+    	//===============================================
+        // Set up JavaFX
+        //===============================================
+    	
         // set path to our fxml file
         Parent root = FXMLLoader.load(getClass().getResource("GeneticAlgorithmSolverApp.fxml"));
 
@@ -39,9 +52,13 @@ public class GeneticAlgorithmSolverApp extends Application {
         primaryStage.setTitle("Tsp Application");
         primaryStage.setScene(scene);
         primaryStage.show();
+        
+        //===============================================
+        // Randomly generate each city
+        //===============================================
 
         // generate coordinates of all nodes
-        List<Double[]> generatedCoordinates = GraphGenerator.generateGraph(45);
+        List<Double[]> generatedCoordinates = GraphGenerator.generateGraph(NUMBER_OF_CITIES);
         
         // populate list of nodes
         List<Node> nodes = new ArrayList<>();
@@ -50,14 +67,10 @@ public class GeneticAlgorithmSolverApp extends Application {
         for (Double[] coordinates : generatedCoordinates) {
             nodes.add(new Node(coordinates[0], coordinates[1], coordinates[2]));
         }
-
+        
         //===============================================
         // Set up variables for genetic algorithm
         //===============================================
-        Integer maxPopulationSize = 200;
-        Integer experimentLength = 1200;
-        Integer cycleCount = 0;
-        Integer mutationsOf1000 = 150;
 
         // current population
         List<LifeForm> population = new ArrayList<>();
@@ -75,19 +88,16 @@ public class GeneticAlgorithmSolverApp extends Application {
         LifeForm expWorstLifeForm = null;
 
         //===============================================
-        // Get initial population using greedy algorithm
+        // Fill initial population using greedy algorithm
         //===============================================
-        if (maxPopulationSize > nodes.size()) {
-            maxPopulationSize = nodes.size();
-        }
         
         // fill population using a simple greedy algorithm
-        for (int initialNodeIndex = 0; initialNodeIndex < maxPopulationSize; initialNodeIndex++) {
+        for (int initialNodeIndex = 0; initialNodeIndex < NUMBER_OF_CITIES - 1; initialNodeIndex++) {
             // begin to build path
-            List<Node> unvisitedNodes = new ArrayList<>(nodes);
+            List<Node> unvisitedNodes = new ArrayList<Node>(nodes);
             ObservableList<Node> path = FXCollections.observableArrayList();
 
-            // add the starting node
+            // visit the starting node
             Node startingNode = unvisitedNodes.get(initialNodeIndex);
             path.add(startingNode);
             unvisitedNodes.remove(startingNode);
@@ -108,7 +118,12 @@ public class GeneticAlgorithmSolverApp extends Application {
         //===============================================
         // Begin cycles
         //===============================================
-        while (cycleCount < experimentLength) {
+        
+        // get experiment starting time
+        long startingTime = System.nanoTime();
+        
+        
+        for (int cycleCount = 0; cycleCount < EXPERIMENT_LENGTH; cycleCount++) {
         	
             popMaxDistance = null;
             popMinDistance = null;
@@ -153,9 +168,12 @@ public class GeneticAlgorithmSolverApp extends Application {
             //-----------------------------------------------
             // Kill
             //-----------------------------------------------
+            
+            // reset variable used to ensure we do not kill the best lifeform
             Double pathDistanceToBeat = null;
+            
             // kill off lifeforms until population is half the maximum size
-            while (population.size() > maxPopulationSize / 2) {
+            while (population.size() > MAX_POPULATION_SIZE / 2) {
             	
                 // pick a random index anywhere in the population
                 int indexNum = ThreadLocalRandom.current().nextInt(0, population.size());
@@ -168,7 +186,6 @@ public class GeneticAlgorithmSolverApp extends Application {
                 }
                 
                 // If our target is longer than our pathDistanceToBeat, kill the target.
-                // TODO: prevent infinite looping of while loop
                 if (target.getTotalDistance() > pathDistanceToBeat) {
                     population.remove(target);
                 }
@@ -184,7 +201,7 @@ public class GeneticAlgorithmSolverApp extends Application {
             // create an empty list of babies which we will be adding onto 
             List<LifeForm> babies = new ArrayList<>();
             
-            while (population.size() + babies.size() < maxPopulationSize) {
+            while (population.size() + babies.size() < MAX_POPULATION_SIZE) {
             	
             	// assign lifeforms 1 and 2 as parents
                 LifeForm parentX = population.get(0);
@@ -239,7 +256,7 @@ public class GeneticAlgorithmSolverApp extends Application {
                 Integer random = ThreadLocalRandom.current().nextInt(1,1001);
                 
                 // if this number is less than our set mutations per 1000 lifeforms, mutate
-                if (random < mutationsOf1000) {
+                if (random < MUTATIONS_OF_1000) {
                 	
                 	LifeForm mutatedLifeForm;
                 	
@@ -258,6 +275,15 @@ public class GeneticAlgorithmSolverApp extends Application {
 
             cycleCount++;
         }
+        
+        //===============================================
+        // Display experiment results in application
+        //===============================================
+        
+        // get total time taken by experiment
+        Long totalTime = System.nanoTime() - startingTime;
+        // format to amount in milliseconds as a string
+        String totalTimeFormatted = String.format("%.0f", totalTime * Math.pow((double) 10, -6));
 
 
         // draw best path overall
@@ -270,11 +296,13 @@ public class GeneticAlgorithmSolverApp extends Application {
 
         // list properties for Genetic Algorithm
         List<String> propertyList = new ArrayList<>();
-        propertyList.add("Length of Experiment: " + experimentLength + " cycles");
-        propertyList.add("Mutation Rate: approximately " + mutationsOf1000 + " mutations every thousand life forms");
-        propertyList.add("Population Size: " + maxPopulationSize);
-        propertyList.add("Longest path: " + expWorstLifeForm.getPath());
-        propertyList.add("Longest path Cost: " + expWorstLifeForm.getTotalDistance());
+        propertyList.add("Time taken to run experiment: " + totalTimeFormatted + " milliseconds");
+        propertyList.add("Number of cycles: " + EXPERIMENT_LENGTH);
+        propertyList.add("Mutation Rate: approximately " + MUTATIONS_OF_1000 + " mutations every thousand life forms");
+        propertyList.add("Population Size: " + MAX_POPULATION_SIZE);
+        propertyList.add("Number of cities: " + NUMBER_OF_CITIES);
+        propertyList.add("Shortest path: " + expBestLifeForm.getPath());
+        propertyList.add("Shortest path Cost: " + expBestLifeForm.getTotalDistance());
 
         // determine experiment average
         Double expAverage = 0.0;
