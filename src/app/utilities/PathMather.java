@@ -29,4 +29,9 @@ public class PathMather {
     public static Double calculateDistance(Double x1, Double x2, Double y1, Double y2) {
         return Math.sqrt(Math.pow((x1-x2), 2) + Math.pow((y1-y2), 2));
     }
+    
+    // TODO: Implement
+    public static Boolean doLinesIntersect(Node x1, Node x2, Node y1, Node y2) {
+    	return false;
+    }
 }

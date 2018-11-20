@@ -5,6 +5,7 @@ import app.models.Node;
 import app.models.TspFile;
 import app.models.LifeForm;
 import app.utilities.GraphGenerator;
+import app.utilities.PathMather;
 import app.utilities.TspFileParser;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -26,9 +27,9 @@ public class GeneticAlgorithmSolverApp extends Application {
 	//===============================================
     // Set up variables for experiment
     //===============================================
-	public static final Integer NUMBER_OF_CITIES = 25;
+	public static final Integer NUMBER_OF_CITIES = 5;
     public static final Integer MAX_POPULATION_SIZE = 200;
-    public static final Integer EXPERIMENT_LENGTH = 750;
+    public static final Integer EXPERIMENT_LENGTH = 1500;
     public static final Integer MUTATIONS_OF_1000 = 150;
 
     public static void main(String[] args) {
@@ -107,7 +108,7 @@ public class GeneticAlgorithmSolverApp extends Application {
             Node nextNode = startingNode;
 
             while (unvisitedNodes.size() != 0) {
-                nextNode = getNextNode(unvisitedNodes, nextNode);
+                nextNode = getNearestNode(unvisitedNodes, nextNode);
                 // add our nextNode into the path using greedy pick
                 simpleGreedyPick(path, nextNode);
                 // remove the node we added to path
@@ -115,7 +116,7 @@ public class GeneticAlgorithmSolverApp extends Application {
             }
 
             // add path to population
-            population.add(new LifeForm(path, getTotalDistanceOfPath(path)));
+            population.add(new LifeForm(path, PathMather.getTotalDistanceOfPath(path)));
         }
 
         //===============================================
@@ -131,7 +132,7 @@ public class GeneticAlgorithmSolverApp extends Application {
             for (LifeForm lifeForm : population) {
                 // calculate total distance for all new life forms
                 if (lifeForm.getTotalDistance() == null) {
-                    lifeForm.setTotalDistance(getTotalDistanceOfPath(lifeForm.getPath()));
+                    lifeForm.setTotalDistance(PathMather.getTotalDistanceOfPath(lifeForm.getPath()));
                 }
                 // track populations minimum distance
                 if (popMinDistance == null || lifeForm.getTotalDistance() < popMinDistance) {
@@ -243,11 +244,13 @@ public class GeneticAlgorithmSolverApp extends Application {
             Double newPopulationBestDistance = null;
             for (int i = 0; i < population.size(); i++) {
             	
+            	// get target lifeform of this iteration
                 LifeForm lifeForm = population.get(i);
                 
                 // do not mutate the best lifeform of the new population
-                if (newPopulationBestDistance == null || getTotalDistanceOfPath(lifeForm.getPath()) < newPopulationBestDistance ) {
-                	newPopulationBestDistance = getTotalDistanceOfPath(lifeForm.getPath());
+                if (newPopulationBestDistance == null || PathMather.getTotalDistanceOfPath(lifeForm.getPath()) < newPopulationBestDistance ) {
+                	
+                	newPopulationBestDistance = PathMather.getTotalDistanceOfPath(lifeForm.getPath());
                 	continue;
                 }
                 
@@ -260,11 +263,24 @@ public class GeneticAlgorithmSolverApp extends Application {
                 	LifeForm mutatedLifeForm;
                 	
                 	// randomly choose a mutation
-                	Boolean randomBool = ThreadLocalRandom.current().nextBoolean();
-                	if (randomBool) {
-                		mutatedLifeForm = mutateLifeForm2WaySwap(lifeForm);
-                	} else {
-                        mutatedLifeForm = mutateLifeForm3WayMix(lifeForm);             		
+                	Integer whichMutation = ThreadLocalRandom.current().nextInt(3);
+                	
+                	switch(whichMutation) {
+                	
+                	case 0:
+                		mutatedLifeForm = mutate2WaySwap(lifeForm);
+                		break;
+                		
+                	case 1:
+                		mutatedLifeForm = mutate3WayMix(lifeForm);
+                		break;
+                		
+                	case 2:
+                		mutatedLifeForm = mutateIntersections(lifeForm);
+                		break;
+                		
+                	default:
+                		mutatedLifeForm = lifeForm;
                 	}
                 	
                 	// add mutated lifeform back into the population
@@ -333,9 +349,11 @@ public class GeneticAlgorithmSolverApp extends Application {
         Integer randomIndex = ThreadLocalRandom.current().nextInt(0, pathX.size());
 
         for (int i = 0; i < numberOfNodesFromX; i++) {
+        	
             if (randomIndex >= pathX.size()) {
                 randomIndex = 0;
             }
+            
             Node node = pathX.get(randomIndex);
             // add node to baby
             babyPath.add(node);
@@ -348,8 +366,74 @@ public class GeneticAlgorithmSolverApp extends Application {
         baby.setPath(babyPath);
         return baby;
     }
+    
+    /**
+     * randomly pick 2 lines in given lifeform's path to check for intersection
+     * if an intersection is found, resolve it
+     * 
+     * @param target is the lifeform to mutate
+     * @return the mutated target
+     */
+    private LifeForm mutateIntersections(LifeForm target) {
+    	
+    	List<Node> path = new ArrayList<>(target.getPath());
+    	
+    	// if path is not long enough for two paths to intersection it cannot have intersections
+    	if (path.size() < 4) {
+    		return target;
+    	}
+    	
+    	// randomly pick the start of first line: line a
+        Integer a1 = ThreadLocalRandom.current().nextInt(0, path.size());
+        
+        // find a2, the node after a1
+        Integer a2 = a1 + 1;
+        if (a2 >= path.size()) {
+            a2 = 0;
+        }
+        
+        // randomly pick the start of second line: line b
+        Integer b1 = ThreadLocalRandom.current().nextInt(0, path.size());
+        
+        // find b2, the node after b1
+        Integer b2 = b1 + 1;
+        if (b2 >= path.size()) {
+            b2 = 0;
+        }
+        
+        // ensure that line b is not going to be the same line, or a line which shares a node with line a
+        while (b1 == a1 || b1 == a2 || b2 == a1 || b2 == a2) {
+        	// randomly pick new b1
+        	b1 = ThreadLocalRandom.current().nextInt(0, path.size());
+        	
+        	// find new b2, the node that is connected to our new b1
+        	b2 = b1 + 1;
+            if (b2 >= path.size()) {
+                b2 = 0;
+            }
+        }
+        
+        Node nodeA1 = path.get(a1);
+        Node nodeA2 = path.get(a2);
+        Node nodeB1 = path.get(b1);
+        Node nodeB2 = path.get(b2);
+        
+    	// if there is an intersection: resolve it
+        if (PathMather.doLinesIntersect(nodeA1, nodeA2, nodeB1, nodeB2)) {
+        	// resolve intersection
+        	//TODO: implement
+        }
+    	
+    	return target;
+    }
 
-    private LifeForm mutateLifeForm2WaySwap(LifeForm target) {
+    /**
+     * randomly swap two nodes of a lifeform
+     * 
+     * @param target is the lifeform to mutate
+     * @return the mutated target
+     */
+    private LifeForm mutate2WaySwap(LifeForm target) {
         List<Node> path = new ArrayList<>(target.getPath());
         Integer indexA = ThreadLocalRandom.current().nextInt(0, path.size());
         Integer indexB = indexA + 1;
@@ -370,7 +454,13 @@ public class GeneticAlgorithmSolverApp extends Application {
         return mutation;
     }
 
-    private LifeForm mutateLifeForm3WayMix(LifeForm target) {
+    /**
+     * randomly mix up three nodes of a lifeform
+     * 
+     * @param target is the lifeform to mutate
+     * @return the mutated target
+     */
+    private LifeForm mutate3WayMix(LifeForm target) {
         List<Node> path = new ArrayList<>(target.getPath());
         Integer index1 = ThreadLocalRandom.current().nextInt(0, path.size());
         Integer index2 = index1 + 1;
@@ -411,11 +501,11 @@ public class GeneticAlgorithmSolverApp extends Application {
         return mutation;
     }
 
-    private Node getNextNode(List<Node> nodes, Node previousNode) {
+    private Node getNearestNode(List<Node> nodes, Node previousNode) {
         Node nearestNode = null;
         Double nearestDistance = null;
         for (Node node : nodes) {
-            Double distance = calculateDistance(previousNode.getxCoord(), node.getxCoord(), previousNode.getyCoord(), node.getyCoord());
+            Double distance = PathMather.calculateDistance(previousNode.getxCoord(), node.getxCoord(), previousNode.getyCoord(), node.getyCoord());
             if (nearestDistance == null || distance < nearestDistance) {
                 nearestDistance = distance;
                 nearestNode = node;
@@ -461,29 +551,5 @@ public class GeneticAlgorithmSolverApp extends Application {
             Integer n1Index = path.indexOf(n1);
             path.add(n1Index, nextNode);
         }
-    }
-
-    private static Double getTotalDistanceOfPath(List<Node> path) {
-        Double totalDistance = 0.0;
-        for (int i = 0; i < path.size(); i++) {
-            Double x1 = path.get(i).getxCoord();
-            Double x2 = null;
-            Double y1 = path.get(i).getyCoord();
-            Double y2 = null;
-            // last node makes edge with first node
-            if (i == path.size() - 1) {
-                x2 = path.get(0).getxCoord();
-                y2 = path.get(0).getyCoord();
-            } else {
-                x2 = path.get(i + 1).getxCoord();
-                y2 = path.get(i + 1).getyCoord();
-            }
-            totalDistance += calculateDistance(x1, x2, y1, y2);
-        }
-        return totalDistance;
-    }
-
-    private static Double calculateDistance(Double x1, Double x2, Double y1, Double y2) {
-        return Math.sqrt(Math.pow((x1-x2), 2) + Math.pow((y1-y2), 2));
     }
 }
