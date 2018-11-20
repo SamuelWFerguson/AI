@@ -27,7 +27,7 @@ public class GeneticAlgorithmSolverApp extends Application {
 	//===============================================
     // Set up variables for experiment
     //===============================================
-	public static final Integer NUMBER_OF_CITIES = 5;
+	public static final Integer NUMBER_OF_CITIES = 80;
     public static final Integer MAX_POPULATION_SIZE = 200;
     public static final Integer EXPERIMENT_LENGTH = 1500;
     public static final Integer MUTATIONS_OF_1000 = 150;
@@ -420,8 +420,12 @@ public class GeneticAlgorithmSolverApp extends Application {
         
     	// if there is an intersection: resolve it
         if (PathMather.doLinesIntersect(nodeA1, nodeA2, nodeB1, nodeB2)) {
+        	
         	// resolve intersection
-        	//TODO: implement
+        	path.set(a1, nodeB1);
+        	path.set(b1, nodeA1);
+        	path.set(a2, nodeB2);
+        	path.set(b2, nodeA2);
         }
     	
     	return target;
